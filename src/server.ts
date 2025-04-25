@@ -1,49 +1,26 @@
-import { ApolloServer } from '@apollo/server'
-import { expressMiddleware } from '@apollo/server/express4'
-import { typeDefs } from './graphql/typeDefs'
-import { resolvers } from './graphql/resolvers'
-import express from 'express'
-import mongoose from 'mongoose'
-import cors from 'cors'
-import dotenv from 'dotenv'
-dotenv.config()
+import dotenv from "dotenv";
+import connectDB from "./config/db";
+import { app, setupApolloServer } from "./app";
 
-// Create Express server
-const app = express()
+dotenv.config();
 
-// Create Apollo server
-const apolloServer = new ApolloServer({
-  typeDefs,
-  resolvers
-})
-
-// Start Server
+// Start the server
 const startServer = async () => {
   try {
     // Connect to MongoDB
-    const MONGO_URI = process.env.MONGO_URI!
-    await mongoose.connect(MONGO_URI, { dbName: 'my_store' })
-    console.log("Connected to MongoDB")
+    await connectDB();
 
-    // Apollo Server
-    await apolloServer.start()
+    // Setup Apollo Server
+    await setupApolloServer();
 
-    // Unified middleware
-    app.use(
-      "/graphql",
-      cors(),
-      express.json(),
-      expressMiddleware(apolloServer)
-    )
-
-    // Express Server
-    const PORT = process.env.PORT || 3000
+    // Start Express server
+    const PORT = process.env.PORT || 3000;
     app.listen(PORT, () => {
-      console.log(`Server is running on http://localhost:${PORT}/graphql...`)
-    })
+      console.log(`Server is running on http://localhost:${PORT}/graphql...`);
+    });
   } catch (err) {
-    console.error(`Error starting server...`)
+    console.error("Error starting server:", err);
   }
-}
+};
 
-startServer()
+startServer();

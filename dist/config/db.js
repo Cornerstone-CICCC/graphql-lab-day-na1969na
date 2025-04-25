@@ -12,25 +12,26 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
+const mongoose_1 = __importDefault(require("mongoose"));
 const dotenv_1 = __importDefault(require("dotenv"));
-const db_1 = __importDefault(require("./config/db"));
-const app_1 = require("./app");
 dotenv_1.default.config();
-// Start the server
-const startServer = () => __awaiter(void 0, void 0, void 0, function* () {
+const dbURI = process.env.MONGO_URI;
+if (!dbURI) {
+    throw new Error('Mongo URI is not defined');
+}
+const connectDB = () => __awaiter(void 0, void 0, void 0, function* () {
     try {
-        // Connect to MongoDB
-        yield (0, db_1.default)();
-        // Setup Apollo Server
-        yield (0, app_1.setupApolloServer)();
-        // Start Express server
-        const PORT = process.env.PORT || 3000;
-        app_1.app.listen(PORT, () => {
-            console.log(`Server is running on http://localhost:${PORT}/graphql...`);
-        });
+        yield mongoose_1.default.connect(process.env.MONGO_URI);
+        console.log('MongoDB connected');
     }
-    catch (err) {
-        console.error("Error starting server:", err);
+    catch (error) {
+        if (error instanceof Error) {
+            console.error('MongoDB connection error:', error.message);
+        }
+        else {
+            console.error('MongoDB connection error:', error);
+        }
+        process.exit(1);
     }
 });
-startServer();
+exports.default = connectDB;
